@@ -30,7 +30,9 @@ void *pthreadSpinlockTest() {
 	printf("Starting Test 2\n");
 	for(i=0;i<numItterations;i++) {
 		printf("here?\n"); 
-		if (pthread_spin_lock(&count_spinlock)!=0){
+		if (pthread_spin_lock(&count_spinlock)==0){
+			printf("lock ok\n");
+		} else {
 			printf("lock failed\n");
 		}
 		c++;
