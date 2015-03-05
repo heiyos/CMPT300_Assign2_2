@@ -28,7 +28,8 @@ pthread_spinlock_t count_spinlock;
 void *pthreadSpinlockTest() {
 	int i;
 	printf("Starting Test 2\n");
-	for(i=0;i<numItterations;i++) { 
+	for(i=0;i<numItterations;i++) {
+		printf("here?\n"); 
 		if (pthread_spin_lock(&count_spinlock)!=0){
 			printf("lock failed\n");
 		}
