@@ -10,6 +10,7 @@ int numThreads;
 int numItterations;
 int testID;
 pthread_mutex_t count_mutex;
+pthread_spinlock_t count_spinlock;
 
 
 unsigned long long timespecDiff(struct timespec *timeA_p, struct timespec *timeB_p)
