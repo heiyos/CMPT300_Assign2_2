@@ -9,37 +9,39 @@ void *fnC() {
 }
 
 /* For the PThread Mutex Test */
-pthread_mutex_t count_mutex;
 
 void *pthreadMutexTest() {
 	int i;
-	printf("Starting test 1\n");
 	for(i=0;i<numItterations;i++) { 
 		pthread_mutex_lock(&count_mutex);
 		c++;
-		printf("Iteration Number: %d\n", c);
 		pthread_mutex_unlock(&count_mutex);	
 	}   
 }
 
 /* For the PThread Mutex Test */
-pthread_spinlock_t count_spinlock;
 
 void *pthreadSpinlockTest() {
 	int i;
-	printf("Starting Test 2\n");
-	for(i=0;i<numItterations;i++) {
-		printf("here?\n"); 
-		if (pthread_spin_lock(&count_spinlock)==0){
-			printf("lock ok\n");
-		} else {
-			printf("lock failed\n");
-		}
+	for(i=0;i<numItterations;i++) { 
+		pthread_spin_lock(&count_spinlock);
 		c++;
-		printf("Iteration Number: %d\n", c);
 		pthread_spin_unlock(&count_spinlock);	
 	}   
 }
+
+void *mySpinlockTest() {
+	int i;
+	for(i=0;i<numItterations;i++) { 
+		while (my_spinlock_lockTAS(&my_spinlock)!=0){
+			//my_spinlock_lockTAS(&my_spinlock);
+			continue;
+		}
+		c++;
+		my_spinlock_unlock(&my_spinlock);
+	}   
+}
+
 
 /* Run the tests */
 int runTest(int testID) {
@@ -82,6 +84,8 @@ int runTest(int testID) {
 		struct timespec start;
 		struct timespec stop;
 		unsigned long long result;
+		
+		pthread_spin_init(&count_spinlock, 0);
 
 		pthread_t *threads = (pthread_t* )malloc(sizeof(pthread_t)*numThreads);	
 		int i;
@@ -101,6 +105,7 @@ int runTest(int testID) {
 		}
 		clock_gettime(CLOCK_MONOTONIC, &stop);
 
+		pthread_spin_destroy(&count_spinlock);
 		printf("Threaded Run Pthread (Spinlock) Total Count: %d\n", c);
 		result=timespecDiff(&stop,&start);
 		printf("Pthread Spinlock time(ms): %llu\n",result/1000000);
@@ -108,7 +113,36 @@ int runTest(int testID) {
 
 	/* MySpinlockTAS */
 	if(testID == 0 || testID == 3) {
+		printf("Start of TestID 3 - my Spinlock\n");
+		c=0;
+		struct timespec start;
+		struct timespec stop;
+		unsigned long long result;
+		
+		my_spinlock_init(&my_spinlock);
 
+		pthread_t *threads = (pthread_t* )malloc(sizeof(pthread_t)*numThreads);	
+		int i;
+		int rt;
+
+		clock_gettime(CLOCK_MONOTONIC, &start);
+		for(i=0;i<numThreads;i++) {
+	
+			if( rt=(pthread_create(threads+i, NULL, &mySpinlockTest, NULL)) ) {
+				printf("Thread creation failed: %d\n", rt);
+				return -1;	
+			}
+		}
+	
+		for(i=0;i<numThreads;i++) {
+			 pthread_join(threads[i], NULL);
+		}
+		clock_gettime(CLOCK_MONOTONIC, &stop);
+
+		my_spinlock_destroy(&my_spinlock);
+		printf("Threaded Run mySpinLockTAS (Spinlock) Total Count: %d\n", c);
+		result=timespecDiff(&stop,&start);
+		printf("Pthread Spinlock time(ms): %llu\n",result/1000000);
 	}
 
 	/* MySpinlockTTAS */
@@ -184,11 +218,12 @@ int main(int argc, char *argv[]) {
 
 
 	printf("\nUsage of: %s \n", argv[0]);
-	printf("Please use the following input format: -t #threads -i #itterations -d testid\n", argv[0]);
-	printf("If a parameter is missed default values will be used. \n", argv[0]);
+	printf("Please use the following input format: -t #threads -i #itterations -d testid\n");
+	printf("If a parameter is missed default values will be used. \n");
 	printf("testid:\n    0 = all\n    1 = pthreadMutex\n    2 = pthreadSpinlock\n    3 = mySpinLockTAS\n    4 = mySpinLockTTAS\n    5 = myMutexTAS\n    6 = myMutexTTAS\n");	
 	
 	processInput(argc,argv);
 	runTest(testID);
+
 	return 0;
 }

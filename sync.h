@@ -8,6 +8,15 @@
 #define _my_SYNC_H_
 
 #include "atomic_ops.h"
+#include <pthread.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <stdint.h>
+#include <time.h>
+ #include <unistd.h>
+#include <sys/syscall.h>
 
 struct my_mutex_struct {
   /* FILL ME IN! */
@@ -32,8 +41,12 @@ int my_mutex_trylock(my_mutex_t *mutex);
 /*Spinlock Starts here*/
 
 struct my_spinlock_struct {
-  /* FILL ME IN! */
+  unsigned long lock;
+  pid_t lock_owner;
 };
+
+pid_t owner;
+pid_t current;
 
 typedef struct my_spinlock_struct my_spinlock_t;
 
