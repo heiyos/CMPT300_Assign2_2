@@ -13,9 +13,11 @@ pthread_mutex_t count_mutex;
 
 void *pthreadMutexTest() {
 	int i;
+	printf("Starting test 1\n");
 	for(i=0;i<numItterations;i++) { 
 		pthread_mutex_lock(&count_mutex);
 		c++;
+		printf("Iteration Number: %d\n", c);
 		pthread_mutex_unlock(&count_mutex);	
 	}   
 }
