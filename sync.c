@@ -41,7 +41,7 @@ int my_spinlock_lockTAS(my_spinlock_t *mutex){
 	int lock_status = mutex -> lock;
 	if (lock_status == unlocked){
 		owner = syscall(SYS_gettid);
-		tas(&mutex -> lock);
+		while (tas(&mutex -> lock));
 		return 0;
 	} else if (syscall(SYS_gettid) == owner){
 		return 0;
