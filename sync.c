@@ -23,49 +23,44 @@ int my_spinlock_init(my_spinlock_t *mutex){
 }
 
 int my_spinlock_destroy(my_spinlock_t *mutex){
-	//delete mutex;
+	//free(mutex);
 	return 0;
 }
 
 int my_spinlock_unlock(my_spinlock_t *mutex){
-	current = syscall(SYS_gettid);
-	if (owner == current){
-		mutex -> lock = 0;
-		return 0;
-	} else {
-		return -1;
-	}
+	mutex -> lock = 0;
+	return 0;
 }
 
 int my_spinlock_lockTAS(my_spinlock_t *mutex){
-	int lock_status = mutex -> lock;
-	if (lock_status == unlocked){
-		owner = syscall(SYS_gettid);
-		while (tas(&mutex -> lock));
-		return 0;
-	} else if (syscall(SYS_gettid) == owner){
-		return 0;
-	} else {
-		return -1;
+	while (tas(&mutex -> lock)){
+		continue;
 	}
+	return 0;
 	
 }
 
 
 int my_spinlock_lockTTAS(my_spinlock_t *mutex){
-	/*int temp = mutex -> lock;
-	if (temp == 1){
-		if (temp == 0){
-			mutex -> lock = 1;
+	current = pthread_self();
+	while (1){
+		while (mutex -> lock == locked/* || (current != owner)*/){
+			continue;
 		}
-	} else {
-		mutex -> lock = 0;
+		if (!tas(&mutex -> lock)/* || current == owner*/){
+			owner = current;
+			return 0;
+		}
 	}
-	return 0;*/
+	return -1;
 }
 
 int my_spinlock_trylock(my_spinlock_t *mutex){
-
+	if (tas(&mutex -> lock)){
+		return -1;
+	} else {
+		return 0;
+	}
 }
 
 

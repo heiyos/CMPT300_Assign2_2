@@ -42,7 +42,6 @@ int my_mutex_trylock(my_mutex_t *mutex);
 
 struct my_spinlock_struct {
   unsigned long lock;
-  pid_t lock_owner;
 };
 
 pid_t owner;
